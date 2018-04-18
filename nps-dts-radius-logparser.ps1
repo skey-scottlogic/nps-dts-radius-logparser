@@ -2,10 +2,13 @@
 # v 0.0.2 / 20180328
 # Author: Simon Key <skey@scottlogic.com>
 
+# PS C:\Windows\System32\LogFiles\NPS> .\nps-dts-radius-logparser.ps1 .\iaslog47.log | ? { $_.ClientFriendlyName -eq "NET_NCS" -and $_.SamAccountName -like "*manbearpig*" }
+
 param (
-    [string]$log = "C:\Windows\System32\LogFiles\" + (Get-ChildItem -Path "C:\Windows\System32\LogFiles" -File iaslog*.log | Sort-Object LastWriteTime -Descending | Select-Object -First 1),
-    [int]$tail = 100,
-    [switch]$follow = $false
+    [string]$log = "C:\Windows\System32\LogFiles\" + (Get-ChildItem -Path "C:\Windows\System32\LogFiles" -File iaslog*.log | Sort-Object LastAccessTime -Descending | Select-Object -First 1),
+    [int]$tail = 1000,
+    [switch]$follow = $false,
+    [switch]$l = $false
 )
 
 $packetTypes = @{
@@ -74,4 +77,8 @@ Function line ($logline) {
     return $l
 }
 
-Get-Content $log -Tail $tail -Wait:$follow | % { line(([xml]$_).Event) }
+if ($l) {
+    Get-Content $log -Tail $tail -Wait:$follow | % { line(([xml]$_).Event) } | fl
+} else {
+    Get-Content $log -Tail $tail -Wait:$follow | % { line(([xml]$_).Event) } | ft
+}
